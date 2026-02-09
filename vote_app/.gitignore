@@ -1,0 +1,13 @@
+# Anchor / Solana
+target/
+**/*.keypair.json
+**/*-keypair.json
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.env
+
+# Misc
+.DS_Store
