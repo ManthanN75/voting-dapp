@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 #[account]
-pub struct TreasuryConfig{
+#[derive(InitSpace)]
+pub struct TreasuryConfig {
     pub authority: Pubkey,
     pub x_mint: Pubkey,
     pub treasury_token_account: Pubkey,
