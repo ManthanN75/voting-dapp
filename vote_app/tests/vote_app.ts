@@ -22,6 +22,10 @@ const findPda = (programId:anchor.web3.PublicKey, seeds:(Buffer | Uint8Array)[])
     return pda;
 }
 
+const createTokenAccounts = ()=>{
+   treasuryTokenAccount = await getOrCreateAssociatedTokenAccount(
+}
+
 describe("vote_app", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
@@ -33,6 +37,7 @@ describe("vote_app", () => {
   let xMintPda: anchor.web3.PublicKey;
   let solVaultPda: anchor.web3.PublicKey;
   let mintAuthorityPda: anchor.web3.PublicKey;
+  let treasuryTokenAccount: anchor.web3.PublicKey;
 
   beforeEach(() => {
     treasuryConfigPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.TREASURY_CONFIG)]);
@@ -57,5 +62,16 @@ describe("vote_app", () => {
       expect(treasuryAccountData.tokensPerPurchase.toNumber()).to.equal(tokensPerPurchase.toNumber());
       expect(treasuryAccountData.xMint.toBase58()).to.equal(xMintPda.toBase58());
 
+  });
+
+  it("buys tokens!", async () => {
+   
+    await program.methods.buyTokens().accounts({
+      authority: adminWallet.publicKey,
+    }).rpc();
+
+
+
+   
   });
 });
