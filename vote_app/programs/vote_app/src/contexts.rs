@@ -4,7 +4,6 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
 };
-
 #[derive(Accounts)]
 pub struct InitializeTreasury<'info> {
     #[account(mut)]
@@ -56,23 +55,21 @@ pub struct InitializeTreasury<'info> {
 #[derive(Accounts)]
 pub struct BuyTokens<'info> {
 
-        #[account(
+    #[account(
         seeds = [b"treasury_config"],
-        bump
+        bump,
+        constraint = treasury_config_account.x_mint == x_mint.key()
     )]
     pub treasury_config_account: Account<'info, TreasuryConfig>,
 
-    /// CHECK: This is a PDA vault that holds SOL.
+    /// CHECK: This is to recieve SOL tokens.
     #[account(mut,seeds=[b"sol_vault"], bump = treasury_config_account.bump)]
     pub sol_vault: AccountInfo<'info>,
 
     #[account(mut)]
     pub treasury_token_account: Account<'info, TokenAccount>,
 
-        #[account(
-        seeds = [b"x_mint"],
-        bump
-    )]
+    #[account(mut)]
     pub x_mint: Account<'info, Mint>,
 
     #[account(
