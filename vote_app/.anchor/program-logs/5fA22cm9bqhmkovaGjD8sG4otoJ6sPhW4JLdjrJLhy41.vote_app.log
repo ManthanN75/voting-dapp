@@ -1,6 +1,6 @@
 Streaming transaction logs mentioning 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41. Confirmed commitment
-Transaction executed in slot 32:
-  Signature: gqPQEZq9g7dqps1cp4TZ2moCJhHRA81xWCUbEUZ2mnypMerjNMmvXvJnS5j37XmDhtFTDs1rr8VarpnmCWWo4D4
+Transaction executed in slot 27:
+  Signature: 5dzzKBZvu77qkAMRZBmuCSYVSihPwqESY3w9XjR6bX6f5qb85LgoK63RDTC5yhd3HRDa6vwod7VUgH54pXgceNHU
   Status: Ok
   Log Messages:
     Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 invoke [1]
@@ -36,22 +36,45 @@ Transaction executed in slot 32:
     Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success
     Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 consumed 69226 of 200000 compute units
     Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 success
-Transaction executed in slot 34:
-  Signature: 2oB8KT84uPVc6jKboSqBp3tKVC3RnnLJofHAxxadYZiQmd9SPGvnKczm2Z1zAnQx5mgFJ2qBDJtMjsQLmFPqH3qV
+Transaction executed in slot 28:
+  Signature: 5dzzKBZvu77qkAMRZBmuCSYVSihPwqESY3w9XjR6bX6f5qb85LgoK63RDTC5yhd3HRDa6vwod7VUgH54pXgceNHU
   Status: Ok
   Log Messages:
     Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 invoke [1]
-    Program log: Instruction: BuyTokens
+    Program log: Instruction: InitializeTreasury
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
     Program 11111111111111111111111111111111 invoke [2]
     Program 11111111111111111111111111111111 success
     Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]
-    Program log: Instruction: MintTo
-    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4492 of 180016 compute units
+    Program log: Instruction: InitializeMint2
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 2780 of 177398 compute units
     Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success
-    Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 consumed 24994 of 200000 compute units
+    Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [2]
+    Program log: Create
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]
+    Program log: Instruction: GetAccountDataSize
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1595 of 152199 compute units
+    Program return: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA pQAAAAAAAAA=
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success
+    Program 11111111111111111111111111111111 invoke [3]
+    Program 11111111111111111111111111111111 success
+    Program log: Initialize the associated token account
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]
+    Program log: Instruction: InitializeImmutableOwner
+    Program log: Please upgrade to SPL Token 2022 for immutable owner support
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1405 of 145694 compute units
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]
+    Program log: Instruction: InitializeAccount3
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4214 of 141865 compute units
+    Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success
+    Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 26174 of 163542 compute units
+    Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success
+    Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 consumed 69226 of 200000 compute units
     Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 success
-Transaction executed in slot 35:
-  Signature: 2oB8KT84uPVc6jKboSqBp3tKVC3RnnLJofHAxxadYZiQmd9SPGvnKczm2Z1zAnQx5mgFJ2qBDJtMjsQLmFPqH3qV
+Transaction executed in slot 30:
+  Signature: 4UX7zmbf1zxRVBaZf95jUSHVwp7SCDA5XCLt2SZoGNs7UmnGDZMzX7K2frZHPHd3nsNrGo3fpFVEeBPR1PXApHGt
   Status: Ok
   Log Messages:
     Program 5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41 invoke [1]

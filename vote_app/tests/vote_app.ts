@@ -5,6 +5,7 @@ import { VoteApp } from "../target/types/vote_app";
 import { expect } from "chai";
 import{
   getOrCreateAssociatedTokenAccount, 
+  getAccount,
   TOKEN_PROGRAM_ID, 
   ASSOCIATED_TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
@@ -95,7 +96,8 @@ describe("testing the voting app", () => {
   })
 
   describe("2. Buy Tokens",()=>{
-    it("buys tokens!", async () => {
+    it("2.1 buys tokens!", async () => {
+      const tokenBalanceBefore = (await getAccount(connection, proposalCreatorTokenAccount)).amount;
       await program.methods.buyTokens().accounts({
         buyer: proposalCreatorWallet.publicKey,
         treasuryConfigAccount: treasuryConfigPda,
@@ -107,6 +109,10 @@ describe("testing the voting app", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
       }).signers([proposalCreatorWallet]).rpc();
+
+      const tokenBalanceAfter = (await getAccount(connection, proposalCreatorTokenAccount)).amount;
+      expect(tokenBalanceAfter-tokenBalanceBefore).to.equal(BigInt(1000_000_000));
+
     });
  })
 })

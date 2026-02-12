@@ -91,3 +91,22 @@ pub struct BuyTokens<'info> {
 
 
 }
+
+#[derive(Accounts)]
+pub struct RegisterVoter<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + Voter:: INIT_SPACE,
+        seeds = [b"voter", authority.key().as_ref()],
+        bump
+    )]
+    pub voter_account: Account<'info, Voter>,
+
+
+
+
+    pub system_program: Program<'info, System>,
+}
