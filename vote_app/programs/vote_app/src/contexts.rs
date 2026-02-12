@@ -99,7 +99,7 @@ pub struct RegisterVoter<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + Voter:: INIT_SPACE,
+        space = 8 + Voter::INIT_SPACE,
         seeds = [b"voter", authority.key().as_ref()],
         bump
     )]

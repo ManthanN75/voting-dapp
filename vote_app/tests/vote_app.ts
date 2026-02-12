@@ -16,7 +16,10 @@ const SEEDS = {
   X_MINT: "x_mint",
   SOL_VAULT: "sol_vault",
   MINT_AUTHORITY: "mint_authority",
+  VOTER: "voter",
 }as const;
+
+const PROPOSAL_ID = 1;
 
 const findPda = (programId:anchor.web3.PublicKey, seeds:(Buffer | Uint8Array)[]): anchor.web3.PublicKey =>{
     const [pda,bump] = anchor.web3.PublicKey.findProgramAddressSync(seeds, programId);
@@ -39,22 +42,32 @@ describe("testing the voting app", () => {
   
   const adminWallet = (provider.wallet as Wallet).payer;
   
-  const proposalCreatorWallet = anchor.web3.Keypair.generate();
+  let proposalCreatorWallet = anchor.web3.Keypair.generate();
+  let voterWallet = anchor.web3.Keypair.generate();
+
   let proposalCreatorTokenAccount:anchor.web3.PublicKey;
 
   let treasuryConfigPda: anchor.web3.PublicKey;
   let xMintPda: anchor.web3.PublicKey;
   let solVaultPda: anchor.web3.PublicKey;
   let mintAuthorityPda: anchor.web3.PublicKey;
+  let voterPda: anchor.web3.PublicKey;
+
   let treasuryTokenAccount: anchor.web3.PublicKey;
   beforeEach(async() => {
     treasuryConfigPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.TREASURY_CONFIG)]);
     xMintPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.X_MINT)]);
+    voterPda= findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.VOTER),
+      voterWallet.publicKey.toBuffer(),
+    ]);
+
     solVaultPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.SOL_VAULT)]);
     mintAuthorityPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.MINT_AUTHORITY)]);
 
     console.log("transferring sol tokens ...");
     await airDropSol(connection, proposalCreatorWallet.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL);
+    await airDropSol(connection, voterWallet.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL);
+
     console.log("transfer of SOL successful"); 
   });
   const createTokenAccounts = async()=>{
@@ -115,4 +128,16 @@ describe("testing the voting app", () => {
 
     });
  })
+
+   describe("3. Voter",()=>{
+    it("3.1 registers voter!", async () => {
+      await program.methods.registerVoter(PROPOSAL_ID).accounts({
+        authority: voterWallet.publicKey,
+      }).signers([voterWallet]).rpc();
+       const voterAccountData = await program.account.voter.fetch(voterPda);
+      expect(voterAccountData.voterId.toBase58).to.equal(voterWallet.publicKey.toBase58);
+      expect(voterAccountData.proposalVoted).to.equal(PROPOSAL_ID);
+    });
+  });
 })
+    
