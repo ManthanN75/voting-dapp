@@ -58,7 +58,7 @@ pub mod vote_app {
       Ok(())
     }
 
-    pub fn register_voter(ctx: Context<RegisterVoter>,proposal_voted:u8) -> Result<()> {
+    pub fn register_voter(ctx: Context<RegisterVoter>,) -> Result<()> {
       let voter_account = &mut ctx.accounts.voter_account;
       voter_account.voter_id = ctx.accounts.authority.key(); 
       voter_account.proposal_voted = proposal_voted;

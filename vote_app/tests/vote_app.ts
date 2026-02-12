@@ -131,7 +131,7 @@ describe("testing the voting app", () => {
 
    describe("3. Voter",()=>{
     it("3.1 registers voter!", async () => {
-      await program.methods.registerVoter(PROPOSAL_ID).accounts({
+      await program.methods.registerVoter().accounts({
         authority: voterWallet.publicKey,
       }).signers([voterWallet]).rpc();
        const voterAccountData = await program.account.voter.fetch(voterPda);
@@ -139,5 +139,7 @@ describe("testing the voting app", () => {
       expect(voterAccountData.proposalVoted).to.equal(PROPOSAL_ID);
     });
   });
+
+  describe("4. ",()=>{
 })
     
