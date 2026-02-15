@@ -126,14 +126,12 @@ pub struct RegisterProposal<'info> {
         init,
         payer = authority,
         space = 8 + Proposal::INIT_SPACE,
-        seeds = [b"proposal", proposal_counter_account.proposal_count.to_le_bytes().as_ref()],
+        seeds = [b"proposal", proposal_counter_account.proposal_count.to_be_bytes().as_ref()],
         bump
     )]
     pub proposal_account: Account<'info, Proposal>,
 
-    #[account(mut,
-        seeds = [b"proposal_counter"],bump
-    )]
+    #[account(mut)]
     pub proposal_counter_account: Account<'info, ProposalCounter>,
 
 

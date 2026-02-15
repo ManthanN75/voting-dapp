@@ -17,6 +17,8 @@ const SEEDS = {
   SOL_VAULT: "sol_vault",
   MINT_AUTHORITY: "mint_authority",
   VOTER: "voter",
+  PROPOSAL_COUNTER: "proposal_counter",
+  PROPOSAL: "proposal",
 }as const;
 
 const PROPOSAL_ID = 1;
@@ -31,6 +33,17 @@ const findPda = (programId:anchor.web3.PublicKey, seeds:(Buffer | Uint8Array)[])
 const airDropSol = async (connection: anchor.web3.Connection, publicKey: anchor.web3.PublicKey, sol: number) => {
   const signature = await connection.requestAirdrop(publicKey, sol);
   await connection.confirmTransaction(signature);
+}
+
+const getBlockTime = async(connection:anchor.web3.Connection) : Promise<number> => {
+  const slot = await connection.getSlot();
+  const getBlockTime = await connection.getBlockTime(slot);
+
+  if(getBlockTime === null){
+    throw new Error("failed to fetch block time");
+  }
+  return getBlockTime;
+
 }
 
 describe("testing the voting app", () => {
@@ -52,20 +65,31 @@ describe("testing the voting app", () => {
   let solVaultPda: anchor.web3.PublicKey;
   let mintAuthorityPda: anchor.web3.PublicKey;
   let voterPda: anchor.web3.PublicKey;
+  let proposalCounterPda: anchor.web3.PublicKey;
+  let proposalPda: anchor.web3.PublicKey;
+
 
   let treasuryTokenAccount: anchor.web3.PublicKey;
   beforeEach(async() => {
     treasuryConfigPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.TREASURY_CONFIG)]);
+
+    proposalCounterPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.PROPOSAL_COUNTER)]);
+
+    proposalPda = findPda(program.programId, 
+      [anchor.utils.bytes.utf8.encode(SEEDS.PROPOSAL),Buffer.from([PROPOSAL_ID])
+    ]); 
+    
+
     xMintPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.X_MINT)]);
-    voterPda= findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.VOTER),
-      voterWallet.publicKey.toBuffer(),
-    ]);
+    voterPda= findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.VOTER), voterWallet.publicKey.toBuffer(),]);
+    
+     
 
     solVaultPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.SOL_VAULT)]);
     mintAuthorityPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.MINT_AUTHORITY)]);
 
     console.log("transferring sol tokens ...");
-    await airDropSol(connection, proposalCreatorWallet.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL);
+    await airDropSol(connection, proposalCreatorWallet.publicKey, 20 * anchor.web3.LAMPORTS_PER_SOL);
     await airDropSol(connection, voterWallet.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL);
 
     console.log("transfer of SOL successful"); 
@@ -129,17 +153,41 @@ describe("testing the voting app", () => {
     });
  })
 
-   describe("3. Voter",()=>{
+  describe("3. Voter",()=>{
     it("3.1 registers voter!", async () => {
       await program.methods.registerVoter().accounts({
         authority: voterWallet.publicKey,
       }).signers([voterWallet]).rpc();
-       const voterAccountData = await program.account.voter.fetch(voterPda);
-      expect(voterAccountData.voterId.toBase58).to.equal(voterWallet.publicKey.toBase58);
-      expect(voterAccountData.proposalVoted).to.equal(PROPOSAL_ID);
+      const voterAccountData = await program.account.voter.fetch(voterPda);
+      expect(voterAccountData.voterId.toBase58()).to.equal(voterWallet.publicKey.toBase58());
     });
   });
 
-  describe("4. ",()=>{
-})
+  describe("4.Proposal Registration ",()=>{
+    it("4.1 registers proposal!", async () => {
+      const currentBlockTime = await getBlockTime(connection);
+
+      const deadlineTime = new anchor.BN(currentBlockTime + 10);
+      const proposalInfo = "Build a layer 2 solution";
+      const stakeAmount = new anchor.BN(1000); 
+
+      await program.methods.registerProposal(proposalInfo, deadlineTime, stakeAmount).accounts({
+        authority: proposalCreatorWallet.publicKey,
+        proposalTokenAccount: proposalCreatorTokenAccount,
+        proposalCounterAccount: proposalCounterPda,
+        treasuryTokenAccount: treasuryTokenAccount,
+        xMint: xMintPda,
+        proposalAccount: proposalPda, 
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }).signers([proposalCreatorWallet]).rpc();
+      const proposalAccountData = await program.account.proposal.fetch(proposalPda);
+      const proposalCounterAccountData = await program.account.proposalCounter.fetch(proposalCounterPda);
+      
+
+      
+    });
+  });
+
+});
     

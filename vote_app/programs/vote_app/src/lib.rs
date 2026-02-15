@@ -93,16 +93,17 @@ use super::*;
         ctx.accounts.token_program.to_account_info(),
         cpi_accounts,
       );
-        //transfer of tokens 
+      //transfer of tokens 
       transfer(cpi_ctx, token_amount)?;
     
       proposal_account.deadline = deadline;
       proposal_account.proposal_info = proposal_info;
       proposal_account.authority = ctx.accounts.authority.key();
 
-      let proposal_counter=&mut ctx.accounts.proposal_counter_account.proposal_count;
+      let proposal_counter_account = &mut ctx.accounts.proposal_counter_account;
 
-      proposal_account.proposal_id = proposal_account.proposal_id+1;
+      proposal_account.proposal_id = proposal_counter_account.proposal_count;
+      proposal_counter_account.proposal_count = proposal_counter_account.proposal_count.checked_add(1).ok_or(VoteError::ProposalCounterOverflow)?;
       Ok(())
     }
 
