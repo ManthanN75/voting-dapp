@@ -107,4 +107,37 @@ use super::*;
       Ok(())
     }
 
+    pub fn proposal_to_vote(ctx: Context<RegisterProposal>,proposal_id: u8,token_amount: u64) -> Result<()> {
+      
+      let clock = Clock::get()?;
+      let proposal_account = &mut ctx.accounts.proposal_account;
+
+      require!(clock.unix_timestamp < deadline, VoteError::InvalidDeadline);
+      //transfer tokens from proposal_token_account to treasury_token_account
+
+
+      let cpi_accounts = Transfer {
+        from: ctx.accounts.proposal_token_account.to_account_info(),
+        to: ctx.accounts.treasury_token_account.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
+      };
+
+      let cpi_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        cpi_accounts,
+      );
+      //transfer of tokens 
+      transfer(cpi_ctx, token_amount)?;
+    
+      proposal_account.deadline = deadline;
+      proposal_account.proposal_info = proposal_info;
+      proposal_account.authority = ctx.accounts.authority.key();
+
+      let proposal_counter_account = &mut ctx.accounts.proposal_counter_account;
+
+      proposal_account.proposal_id = proposal_counter_account.proposal_count;
+      proposal_counter_account.proposal_count = proposal_counter_account.proposal_count.checked_add(1).ok_or(VoteError::ProposalCounterOverflow)?;
+      Ok(())
+    }
+
 }

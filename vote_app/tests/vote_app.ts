@@ -183,8 +183,13 @@ describe("testing the voting app", () => {
       }).signers([proposalCreatorWallet]).rpc();
       const proposalAccountData = await program.account.proposal.fetch(proposalPda);
       const proposalCounterAccountData = await program.account.proposalCounter.fetch(proposalCounterPda);
-      
 
+      expect(proposalCounterAccountData.proposalCount).to.equal(2);
+      expect(proposalAccountData.authority.toBase58()).to.equal(proposalCreatorWallet.publicKey.toBase58());
+      expect(proposalAccountData.deadline.toString()).to.equal(deadlineTime.toString());
+      expect(proposalAccountData.numberOfVotes.toString()).to.equal("0");
+      expect(proposalAccountData.proposalId.toString()).to.equal("1");
+      expect(proposalAccountData.proposalInfo.toString()).to.equal("Build a layer 2 solution");
       
     });
   });
