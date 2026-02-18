@@ -16,7 +16,7 @@ pub mod vote_app {
 
   use crate::state::ProposalCounter;
 
-use super::*;
+  use super::*;  
 
     pub fn initialize_treasury(ctx: Context<InitializeTreasury>,sol_price:u64,tokens_per_purchase:u64) -> Result<()> {
       let treasury_config_account = &mut ctx.accounts.treasury_config_account;
@@ -107,17 +107,19 @@ use super::*;
       Ok(())
     }
 
-    pub fn proposal_to_vote(ctx: Context<RegisterProposal>,proposal_id: u8,token_amount: u64) -> Result<()> {
+    
+    pub fn proposal_to_vote(ctx: Context<Vote>,proposal_id: u8,token_amount: u64) -> Result<()> {
       
       let clock = Clock::get()?;
       let proposal_account = &mut ctx.accounts.proposal_account;
 
-      require!(clock.unix_timestamp < deadline, VoteError::InvalidDeadline);
+      require!(clock.unix_timestamp < proposal_account.deadline, VoteError::ProposalEnded);
+      
       //transfer tokens from proposal_token_account to treasury_token_account
 
 
       let cpi_accounts = Transfer {
-        from: ctx.accounts.proposal_token_account.to_account_info(),
+        from: ctx.accounts.voter_token_account.to_account_info(),
         to: ctx.accounts.treasury_token_account.to_account_info(),
         authority: ctx.accounts.authority.to_account_info(),
       };
@@ -128,15 +130,13 @@ use super::*;
       );
       //transfer of tokens 
       transfer(cpi_ctx, token_amount)?;
+
+      let voter_account = &mut ctx.accounts.voter_account;
+      voter_account.proposal_voted = proposal_id;
+
     
-      proposal_account.deadline = deadline;
-      proposal_account.proposal_info = proposal_info;
-      proposal_account.authority = ctx.accounts.authority.key();
+      proposal_account.number_of_votes = proposal_account.number_of_votes.checked_add(1).ok_or(VoteError::ProposalVotesOverflow)?;
 
-      let proposal_counter_account = &mut ctx.accounts.proposal_counter_account;
-
-      proposal_account.proposal_id = proposal_counter_account.proposal_count;
-      proposal_counter_account.proposal_count = proposal_counter_account.proposal_count.checked_add(1).ok_or(VoteError::ProposalCounterOverflow)?;
       Ok(())
     }
 

@@ -11,6 +11,12 @@ pub enum VoteError{
 
     #[msg("Proposal Counter overflow")]
     ProposalCounterOverflow,
+    
+    #[msg("Proposal Ended")]
+    ProposalEnded,
+    
+    #[msg("Proposal Ended")]
+    ProposalVotesOverflow
 }
 
 

@@ -151,3 +151,42 @@ pub struct RegisterProposal<'info> {
 
     pub system_program: Program<'info, System>,
 }
+
+
+#[derive(Accounts)]
+#[instruction(proposal_id: u8)]
+pub struct Vote<'info> {
+    #[account(
+        mut,
+        seeds =[b"voter",authority.key().as_ref()],bump,
+        constraint = voter_account.proposal_voted == 0
+     )]
+    pub voter_account: Account<'info, Voter>,
+
+    pub x_mint: Account<'info, Mint>,
+
+    #[account(
+         mut,
+         constraint = voter_token_account.mint == x_mint.key() 
+         && voter_token_account.owner == authority.key())]
+    pub voter_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        constraint = treasury_token_account.mint == x_mint.key())]
+       pub treasury_token_account: Account<'info, TokenAccount>,
+   
+    #[account(mut, seeds =[b"proposal",proposal_id.to_be_bytes().as_ref()],bump)]
+    pub proposal_account: Account<'info, Proposal>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    pub token_program: Program<'info, Token>,
+
+    
+}
+
+
+
+
