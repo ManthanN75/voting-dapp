@@ -26,10 +26,10 @@ pub mod vote_app {
       treasury_config_account.tokens_per_purchase = tokens_per_purchase;
       treasury_config_account.x_mint = ctx.accounts.x_mint.key();
       
-      let Proposal_counter_account = &mut ctx.accounts.proposal_counter_account;
-      require!(Proposal_counter_account.proposal_count == 0, VoteError::ProposalCounterAlreadyInitialized);
-      Proposal_counter_account.proposal_count = 1;
-      Proposal_counter_account.authority = ctx.accounts.authority.key();
+      let proposal_counter_account = &mut ctx.accounts.proposal_counter_account;
+      require!(proposal_counter_account.proposal_count == 0, VoteError::ProposalCounterAlreadyInitialized);
+      proposal_counter_account.proposal_count = 1;
+      proposal_counter_account.authority = ctx.accounts.authority.key();
       Ok(())
     }
 

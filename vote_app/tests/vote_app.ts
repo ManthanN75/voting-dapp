@@ -19,6 +19,7 @@ const SEEDS = {
   VOTER: "voter",
   PROPOSAL_COUNTER: "proposal_counter",
   PROPOSAL: "proposal",
+  WINNER: "winner",
 }as const;
 
 const PROPOSAL_ID = 1;
@@ -46,6 +47,15 @@ const getBlockTime = async(connection:anchor.web3.Connection) : Promise<number> 
 
 }
 
+const expectAnchorErrorCode = (error: unknown, expectedCode: string) => {
+  const anyErr = error as any;
+  const actualCode = 
+    anyErr?.error?.errorCode?.code ??
+    anyErr?.errorCode?.code ??
+    anyErr?.code;
+  expect(actualCode).to.equal(expectedCode);
+}
+
 describe("testing the voting app", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
@@ -69,6 +79,7 @@ describe("testing the voting app", () => {
   let proposalPda: anchor.web3.PublicKey;
   let treasuryTokenAccount: anchor.web3.PublicKey;
   let voterTokenAccount: anchor.web3.PublicKey;
+  let winnerPda: anchor.web3.PublicKey;
 
   beforeEach(async() => {
     treasuryConfigPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.TREASURY_CONFIG)]);
@@ -79,6 +90,8 @@ describe("testing the voting app", () => {
       [anchor.utils.bytes.utf8.encode(SEEDS.PROPOSAL),Buffer.from([PROPOSAL_ID])
     ]); 
     
+    winnerPda = findPda(program.programId, 
+      [anchor.utils.bytes.utf8.encode(SEEDS.WINNER)]);
 
     xMintPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.X_MINT)]);
     voterPda= findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.VOTER), voterWallet.publicKey.toBuffer(),]);
@@ -230,6 +243,36 @@ describe("testing the voting app", () => {
     });
   });
 
+  describe("6.Pick Winner ",()=>{
+    it("6.1 should fail to pick winner before deadline!", async () => {
+      try{
+      await program.methods.pickWinner(PROPOSAL_ID)
+      .accounts({
+        authority: adminWallet.publicKey,
+      }).rpc();
+      }catch(error){
+        expectAnchorErrorCode(error, "VotingStillActive");
+      }
 
+    
+      
+      
+    });
+    it("6.2 should pick winner after deadline passes!", async () => {
+      console.log("waiting for deadline...");
+      await new Promise(resolve => setTimeout(resolve, 12000)); // wait for 12 seconds
+      await program.methods
+        .pickWinner(PROPOSAL_ID)
+        .accounts({
+          authority: adminWallet.publicKey,
+        })
+        .rpc();
+
+      const winnerData = await program.account.winner.fetch(winnerPda);
+      expect(winnerData.winningProposalId).to.equal(PROPOSAL_ID);
+      expect(winnerData.winningVotes).to.equal(1);
+    });
+
+  })
 });
     

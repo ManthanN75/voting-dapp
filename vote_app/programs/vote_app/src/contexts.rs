@@ -206,3 +206,23 @@ pub struct PickWinner<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+#[instruction(proposal_id: u8)]
+pub struct CloseProposal<'info> {
+    #[account(
+        mut,
+        seeds = [b"proposal", proposal_id.to_le_bytes().as_ref()],
+        bump,
+        close = destination,
+        constraint = proposal_account.authority == authority.key()
+    )]
+    pub proposal_account: Account<'info, Proposal>,
+
+    /// The account that will receive the rent
+    /// CHECK: This is safe - just receives lamports
+    #[account(mut)]
+    pub destination: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
