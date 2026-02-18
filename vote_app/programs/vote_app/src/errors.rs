@@ -16,7 +16,28 @@ pub enum VoteError{
     ProposalEnded,
     
     #[msg("Proposal Ended")]
-    ProposalVotesOverflow
+    ProposalVotesOverflow,
+
+    #[msg("Cannot declare winner while voting is still active")]
+    VotingStillActive,
+
+    #[msg("No votes have been cast for this proposal")]
+    NoVotesCast,
+
+    #[msg("You are not authorized to perform this action")]
+    UnauthorizedAccess,
+    
+    #[msg("Token mint does not match the expected mint")]
+    TokenMintMismatch,
+
+    #[msg("Voter has already voted on this proposal")]
+    VoterAlreadyVoted,
+
+    #[msg("Token account is not owned by the expected wallet")]
+    InvalidTokenAccountOwner,
+
+    #[msg("Provided mint account is invalid")]
+    InvalidMint,
 }
 
 

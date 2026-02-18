@@ -10,9 +10,9 @@ pub struct TreasuryConfig {
     pub bump: u8,
 }
 
+
 #[account]
 #[derive(InitSpace)]
-
 pub struct Voter{
     pub voter_id: Pubkey,
     pub proposal_voted: u8,
@@ -35,4 +35,14 @@ pub struct Proposal{
 pub struct ProposalCounter{
     pub proposal_count: u8,
     pub authority: Pubkey,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct Winner {
+    pub winning_proposal_id: u8,
+    pub winning_votes: u8,
+    #[max_len(50)]
+    pub proposal_info: String,
+    pub declared_at: i64,
 }

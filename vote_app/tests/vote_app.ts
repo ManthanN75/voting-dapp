@@ -67,9 +67,9 @@ describe("testing the voting app", () => {
   let voterPda: anchor.web3.PublicKey;
   let proposalCounterPda: anchor.web3.PublicKey;
   let proposalPda: anchor.web3.PublicKey;
-
-
   let treasuryTokenAccount: anchor.web3.PublicKey;
+  let voterTokenAccount: anchor.web3.PublicKey;
+
   beforeEach(async() => {
     treasuryConfigPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.TREASURY_CONFIG)]);
 
@@ -89,9 +89,10 @@ describe("testing the voting app", () => {
     mintAuthorityPda = findPda(program.programId, [anchor.utils.bytes.utf8.encode(SEEDS.MINT_AUTHORITY)]);
 
     console.log("transferring sol tokens ...");
-    await airDropSol(connection, proposalCreatorWallet.publicKey, 20 * anchor.web3.LAMPORTS_PER_SOL);
-    await airDropSol(connection, voterWallet.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL);
-
+      await Promise.all([
+        airDropSol(connection, proposalCreatorWallet.publicKey, 20 * anchor.web3.LAMPORTS_PER_SOL),
+        airDropSol(connection, voterWallet.publicKey, 10 * anchor.web3.LAMPORTS_PER_SOL)
+      ]);
     console.log("transfer of SOL successful"); 
   });
   const createTokenAccounts = async()=>{
@@ -111,6 +112,13 @@ describe("testing the voting app", () => {
       proposalCreatorWallet.publicKey
     );
     proposalCreatorTokenAccount = creatorATA.address;
+
+    voterTokenAccount = (await getOrCreateAssociatedTokenAccount(
+      connection,
+      voterWallet,
+      xMintPda,
+      voterWallet.publicKey
+    )).address;
  
   }
   describe("1. Initialization",()=>{
@@ -133,21 +141,30 @@ describe("testing the voting app", () => {
   })
 
   describe("2. Buy Tokens",()=>{
-    it("2.1 buys tokens!", async () => {
+    it("2.1 buys tokens for proposal creator!", async () => {
       const tokenBalanceBefore = (await getAccount(connection, proposalCreatorTokenAccount)).amount;
       await program.methods.buyTokens().accounts({
         buyer: proposalCreatorWallet.publicKey,
-        treasuryConfigAccount: treasuryConfigPda,
-        solVault: solVaultPda,
         treasuryTokenAccount: treasuryTokenAccount, // Pass manually
         xMint: xMintPda,
         buyerTokenAccount: proposalCreatorTokenAccount,
-        mintAuthority: mintAuthorityPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
       }).signers([proposalCreatorWallet]).rpc();
 
       const tokenBalanceAfter = (await getAccount(connection, proposalCreatorTokenAccount)).amount;
+      expect(tokenBalanceAfter-tokenBalanceBefore).to.equal(BigInt(1000_000_000));
+
+    });
+
+    it("2.2 buys tokens for voter!", async () => {
+      const tokenBalanceBefore = (await getAccount(connection, voterTokenAccount)).amount;
+      await program.methods.buyTokens().accounts({
+        buyer: voterWallet.publicKey,
+        treasuryTokenAccount: treasuryTokenAccount, // Pass manually
+        xMint: xMintPda,
+        buyerTokenAccount: voterTokenAccount,
+      }).signers([voterWallet]).rpc();
+
+      const tokenBalanceAfter = (await getAccount(connection, voterTokenAccount)).amount;
       expect(tokenBalanceAfter-tokenBalanceBefore).to.equal(BigInt(1000_000_000));
 
     });
@@ -170,6 +187,8 @@ describe("testing the voting app", () => {
       const deadlineTime = new anchor.BN(currentBlockTime + 10);
       const proposalInfo = "Build a layer 2 solution";
       const stakeAmount = new anchor.BN(1000); 
+      const tokenBalanceBefore = (await getAccount(connection, voterTokenAccount)).amount;
+
 
       await program.methods.registerProposal(proposalInfo, deadlineTime, stakeAmount).accounts({
         authority: proposalCreatorWallet.publicKey,
@@ -193,6 +212,24 @@ describe("testing the voting app", () => {
       
     });
   });
+
+
+  describe("5.Casting Vote ",()=>{
+    it("5.1 casts vote!", async () => {
+
+      const stakeAmount = new anchor.BN(1000); 
+
+      await program.methods.proposalToVote(PROPOSAL_ID, stakeAmount).accounts({
+        authority: voterWallet.publicKey,
+        voterTokenAccount: voterTokenAccount,
+        treasuryTokenAccount: treasuryTokenAccount,
+        xMint: xMintPda,
+      }).signers([voterWallet]).rpc();
+      
+      
+    });
+  });
+
 
 });
     

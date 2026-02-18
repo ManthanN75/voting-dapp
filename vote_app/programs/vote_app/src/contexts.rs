@@ -186,7 +186,23 @@ pub struct Vote<'info> {
 
     
 }
+#[derive(Accounts)]
+#[instruction(proposal_id: u8)]
+pub struct PickWinner<'info> {
+    #[account(
+        init_if_needed,
+        payer = authority,
+        space = 8 + Winner::INIT_SPACE,
+        seeds = [b"winner"],
+        bump
+    )]
+    pub winner_account: Account<'info, Winner>,
 
+    #[account(seeds = [b"proposal", proposal_id.to_le_bytes().as_ref()], bump)]
+    pub proposal_account: Account<'info, Proposal>,
 
-
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
 
