@@ -1,7 +1,8 @@
+use crate::errors::VoteError;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::AssociatedToken,
+    associated_token::AssociatedToken, // Cleaned this up
     token::{Mint, Token, TokenAccount},
 };
 #[derive(Accounts)]
@@ -63,7 +64,6 @@ pub struct InitializeTreasury<'info> {
 
 #[derive(Accounts)]
 pub struct BuyTokens<'info> {
-
     #[account(
         seeds = [b"treasury_config"],
         bump,
@@ -93,12 +93,10 @@ pub struct BuyTokens<'info> {
     pub mint_authority: AccountInfo<'info>,
 
     #[account(mut)]
-    pub buyer:Signer<'info>,
+    pub buyer: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
-    pub system_program:Program<'info,System>
-
-
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -134,7 +132,6 @@ pub struct RegisterProposal<'info> {
     #[account(mut)]
     pub proposal_counter_account: Account<'info, ProposalCounter>,
 
-
     pub x_mint: Account<'info, Mint>,
 
     #[account(
@@ -152,7 +149,6 @@ pub struct RegisterProposal<'info> {
     pub system_program: Program<'info, System>,
 }
 
-
 #[derive(Accounts)]
 #[instruction(proposal_id: u8)]
 pub struct Vote<'info> {
@@ -167,15 +163,15 @@ pub struct Vote<'info> {
 
     #[account(
          mut,
-         constraint = voter_token_account.mint == x_mint.key() 
-         && voter_token_account.owner == authority.key())]
+         constraint = voter_token_account.mint == x_mint.key() @ VoteError::TokenMintMismatch,
+         constraint = voter_token_account.owner == authority.key())]
     pub voter_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         constraint = treasury_token_account.mint == x_mint.key())]
-       pub treasury_token_account: Account<'info, TokenAccount>,
-   
+    pub treasury_token_account: Account<'info, TokenAccount>,
+
     #[account(mut, seeds =[b"proposal",proposal_id.to_be_bytes().as_ref()],bump)]
     pub proposal_account: Account<'info, Proposal>,
 
@@ -183,8 +179,6 @@ pub struct Vote<'info> {
     pub authority: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
-
-    
 }
 #[derive(Accounts)]
 #[instruction(proposal_id: u8)]
@@ -214,7 +208,7 @@ pub struct CloseProposal<'info> {
         seeds = [b"proposal", proposal_id.to_le_bytes().as_ref()],
         bump,
         close = destination,
-        constraint = proposal_account.authority == authority.key()
+        constraint = proposal_account.authority == authority.key() @ VoteError::UnauthorizedAccess
     )]
     pub proposal_account: Account<'info, Proposal>,
 
@@ -222,6 +216,20 @@ pub struct CloseProposal<'info> {
     /// CHECK: This is safe - just receives lamports
     #[account(mut)]
     pub destination: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CloseVoter<'info> {
+    #[account(
+        mut,
+        seeds = [b"voter", authority.key().as_ref()],
+        bump,
+        close = authority,
+    )]
+    pub voter_account: Account<'info, Voter>,
 
     #[account(mut)]
     pub authority: Signer<'info>,

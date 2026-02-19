@@ -253,9 +253,6 @@ describe("testing the voting app", () => {
       }catch(error){
         expectAnchorErrorCode(error, "VotingStillActive");
       }
-
-    
-      
       
     });
     it("6.2 should pick winner after deadline passes!", async () => {
@@ -273,6 +270,24 @@ describe("testing the voting app", () => {
       expect(winnerData.winningVotes).to.equal(1);
     });
 
+  })
+
+  describe("7.close Proposal ",()=>{
+    it("7.1 should close proposal one after deadline and recover rent", async () => {
+    const accountInfoBefore = await connection.getAccountInfo(proposalPda);
+    expect(accountInfoBefore).to.not.be.null;
+
+    await program.methods
+    .closeProposal(PROPOSAL_ID)
+    .accounts({
+      destination: proposalCreatorWallet.publicKey,
+      authority: proposalCreatorWallet.publicKey,
+      })
+      .signers([proposalCreatorWallet]).rpc();
+
+    const accountInfoAfter = await connection.getAccountInfo(proposalPda);
+    expect(accountInfoAfter).to.be.null;
+    });
   })
 });
     

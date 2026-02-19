@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::state::ProposalCounter;
 #[error_code]
-pub enum VoteError{
+pub enum VoteError {
     #[msg("Invalid deadline passed")]
     InvalidDeadline,
 
@@ -11,10 +11,10 @@ pub enum VoteError{
 
     #[msg("Proposal Counter overflow")]
     ProposalCounterOverflow,
-    
+
     #[msg("Proposal Ended")]
     ProposalEnded,
-    
+
     #[msg("Proposal Ended")]
     ProposalVotesOverflow,
 
@@ -26,7 +26,7 @@ pub enum VoteError{
 
     #[msg("You are not authorized to perform this action")]
     UnauthorizedAccess,
-    
+
     #[msg("Token mint does not match the expected mint")]
     TokenMintMismatch,
 
@@ -39,5 +39,3 @@ pub enum VoteError{
     #[msg("Provided mint account is invalid")]
     InvalidMint,
 }
-
-

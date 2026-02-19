@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
-mod state;
-mod contexts;
-use contexts::*;
-mod errors;
-use errors::*;
+pub mod state;
+pub mod contexts;
+pub use crate::contexts::*;
+pub mod errors;
+pub use crate::errors::*;
 mod events;
 use events::*;
 declare_id!("5fA22cm9bqhmkovaGjD8sG4otoJ6sPhW4JLdjrJLhy41");
@@ -104,6 +104,14 @@ pub mod vote_app {
 
       proposal_account.proposal_id = proposal_counter_account.proposal_count;
       proposal_counter_account.proposal_count = proposal_counter_account.proposal_count.checked_add(1).ok_or(VoteError::ProposalCounterOverflow)?;
+
+      emit!(ProposalCreated {
+        proposal_id: proposal_account.proposal_id,
+        proposal_info: proposal_account.proposal_info.clone(),
+        deadline: proposal_account.deadline,
+        creator: proposal_account.authority,
+        timestamp: Clock::get()?.unix_timestamp,
+      });
       Ok(())
     }
 
@@ -164,4 +172,27 @@ pub mod vote_app {
 
 
     }
+
+    pub fn close_proposal(ctx: Context<CloseProposal>, proposal_id: u8) -> Result<()> {
+    let clock = Clock::get()?;
+    let proposal = &ctx.accounts.proposal_account;
+
+    require!(
+      clock.unix_timestamp >= proposal.deadline,
+      VoteError::VotingStillActive
+    );
+
+    Ok(())
+  }
+
+  pub fn close_voter(ctx: Context<CloseVoter>) -> Result<()> {
+    emit!(VoterAccountClosed {
+      voter: ctx.accounts.voter_account.voter_id,
+      rent_recovered_to: ctx.accounts.authority.key(),
+      timestamp: Clock::get()?.unix_timestamp,
+    });
+    // close constraint wil close the account
+    Ok(())
+  }
+
 }
