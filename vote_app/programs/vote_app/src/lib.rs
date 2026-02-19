@@ -12,11 +12,14 @@ use anchor_lang::system_program;
 
 #[program]
 pub mod vote_app {
-  use anchor_spl::token;
+      use super::*;
 
-  use crate::state::ProposalCounter;
 
-  use super::*;  
+
+     use anchor_spl::token;
+
+     use crate::state::ProposalCounter;
+
 
     pub fn initialize_treasury(ctx: Context<InitializeTreasury>,sol_price:u64,tokens_per_purchase:u64) -> Result<()> {
       let treasury_config_account = &mut ctx.accounts.treasury_config_account;
@@ -62,8 +65,15 @@ pub mod vote_app {
             cpi_accounts,
             signer_seeds
         );
-      //3. x mint token
+        //3. x mint token
         mint_to(cpi_ctx, token_amount)?;
+
+        emit!(TokensPurchased {
+          buyer: ctx.accounts.buyer.key(),
+          sol_paid: sol,
+          tokens_received: token_amount,
+          timestamp: Clock::get()?.unix_timestamp,
+        });
       
         Ok(())
     }
@@ -71,6 +81,13 @@ pub mod vote_app {
     pub fn register_voter(ctx: Context<RegisterVoter>) -> Result<()> {
       let voter_account = &mut ctx.accounts.voter_account;
       voter_account.voter_id = ctx.accounts.authority.key();
+
+      emit!(VoterRegistered {
+        voter: ctx.accounts.authority.key(),
+        voter_account: ctx.accounts.voter_account.key(),
+        timestamp: Clock::get()?.unix_timestamp,
+      });
+
       Ok(())
     }
     
@@ -142,8 +159,14 @@ pub mod vote_app {
       let voter_account = &mut ctx.accounts.voter_account;
       voter_account.proposal_voted = proposal_id;
 
-    
       proposal_account.number_of_votes = proposal_account.number_of_votes.checked_add(1).ok_or(VoteError::ProposalVotesOverflow)?;
+
+      emit!(VoteCast {
+        voter: ctx.accounts.authority.key(),
+        proposal_id,
+        tokens_votes: proposal_account.number_of_votes,
+        timestamp: clock.unix_timestamp,
+      });
 
       Ok(())
     }
@@ -167,6 +190,15 @@ pub mod vote_app {
         winner.winning_votes = proposal.number_of_votes;
         winner.proposal_info = proposal.proposal_info.clone();
         winner.declared_at = clock.unix_timestamp;
+
+        emit!(WinnerDeclared {
+          winning_proposal_id: proposal_id,
+          proposal_info: proposal.proposal_info.clone(),
+          total_votes: proposal.number_of_votes,
+          declared_by: ctx.accounts.authority.key(),
+          timestamp: clock.unix_timestamp,
+        });
+
       }
       Ok(())
 
@@ -174,25 +206,62 @@ pub mod vote_app {
     }
 
     pub fn close_proposal(ctx: Context<CloseProposal>, proposal_id: u8) -> Result<()> {
-    let clock = Clock::get()?;
-    let proposal = &ctx.accounts.proposal_account;
+      let clock = Clock::get()?;
+      let proposal = &ctx.accounts.proposal_account;
 
-    require!(
-      clock.unix_timestamp >= proposal.deadline,
-      VoteError::VotingStillActive
-    );
+      require!(
+        clock.unix_timestamp >= proposal.deadline,
+        VoteError::VotingStillActive
+      );
+
+      emit!(ProposalClosed {
+        proposal_id,
+        rent_recovered: ctx.accounts.proposal_account.to_account_info().lamports(),
+        recovered_to: ctx.accounts.authority.key(),
+        timestamp: clock.unix_timestamp,
+      });
 
     Ok(())
-  }
+    }
 
-  pub fn close_voter(ctx: Context<CloseVoter>) -> Result<()> {
-    emit!(VoterAccountClosed {
-      voter: ctx.accounts.voter_account.voter_id,
-      rent_recovered_to: ctx.accounts.authority.key(),
-      timestamp: Clock::get()?.unix_timestamp,
-    });
-    // close constraint wil close the account
-    Ok(())
-  }
+    pub fn close_voter(ctx: Context<CloseVoter>) -> Result<()> {
+      emit!(VoterAccountClosed {
+        voter: ctx.accounts.voter_account.voter_id,
+        rent_recovered_to: ctx.accounts.authority.key(),
+        timestamp: Clock::get()?.unix_timestamp,
+      });
+      // close constraint wil close the account
+      Ok(())
+    }
+
+    pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {
+      let treasury_config = &ctx.accounts.treasury_config;
+
+      // Use PDA signing to transfer SOL from vault to authority
+      let sol_vault_seeds = &[b"sol_vault".as_ref(), &[treasury_config.bump]];
+      let signer_seeds = &[&sol_vault_seeds[..]];
+
+      let transfer_ix = system_program::Transfer {
+          from: ctx.accounts.sol_vault.to_account_info(),
+          to: ctx.accounts.authority.to_account_info(),
+      };
+
+      system_program::transfer(
+          CpiContext::new_with_signer(
+              ctx.accounts.system_program.to_account_info(),
+              transfer_ix,
+              signer_seeds,
+          ),
+          amount,
+      )?;
+
+      emit!(SolWithdrawn {
+          authority: ctx.accounts.authority.key(),
+          amount,
+          timestamp: Clock::get()?.unix_timestamp,
+      });
+
+      Ok(())
+    }
 
 }

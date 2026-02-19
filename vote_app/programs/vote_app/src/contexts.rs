@@ -234,3 +234,26 @@ pub struct CloseVoter<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 }
+
+#[derive(Accounts)]
+pub struct WithdrawSol<'info> {
+    #[account(
+        seeds = [b"treasury_config"],
+        bump,
+        constraint = treasury_config.authority == authority.key() @ VoteError::UnauthorizedAccess
+    )]
+    pub treasury_config: Account<'info, TreasuryConfig>,
+
+    /// The SOL vault PDA
+    /// CHECK: This is a PDA that holds SOL, validated by seeds
+    #[account(
+        mut,
+        seeds = [b"sol_vault"],
+        bump = treasury_config.bump
+    )]
+    pub sol_vault: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}

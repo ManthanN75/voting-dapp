@@ -289,5 +289,30 @@ describe("testing the voting app", () => {
     expect(accountInfoAfter).to.be.null;
     });
   })
+
+  describe("8.Close Voter Account",()=>{
+     it("8.1 Should close voter account one after deadline and recover rent", async () => {
+      const accountInfoBefore = await connection.getAccountInfo(voterPda);
+      expect(accountInfoBefore).to.not.be.null;
+
+      const voterBalanceBefore = await connection.getBalance(voterWallet.publicKey);
+      console.log("Voter Balance Before:",voterBalanceBefore);
+
+      await program.methods
+        .closeVoter()
+        .accounts({
+          authority: voterWallet.publicKey
+        })
+        .signers([voterWallet])
+        .rpc();
+
+       const voterBalanceAfter = await connection.getBalance(voterWallet.publicKey);
+      console.log("Voter Balance After:",voterBalanceAfter);
+
+      const accountInfoAfter = await connection.getAccountInfo(voterPda);
+      expect(accountInfoAfter).to.be.null;
+    });
+
+  })
 });
     
