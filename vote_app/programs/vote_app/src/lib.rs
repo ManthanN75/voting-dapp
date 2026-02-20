@@ -164,7 +164,7 @@ pub mod vote_app {
       emit!(VoteCast {
         voter: ctx.accounts.authority.key(),
         proposal_id,
-        tokens_votes: proposal_account.number_of_votes,
+        total_votes: proposal_account.number_of_votes,
         timestamp: clock.unix_timestamp,
       });
 

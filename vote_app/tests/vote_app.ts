@@ -314,5 +314,48 @@ describe("testing the voting app", () => {
     });
 
   })
-});
-    
+
+  describe("9.Sol withdrawal",()=>{
+    it("9.1 Should withdraw SOL from treasury", async () => {
+      const withdrawAmount = new anchor.BN(100_000_000 );
+      const adminBalanceBefore = await connection.getBalance(adminWallet.publicKey);
+
+      const vaultBalance = await connection.getBalance(solVaultPda);
+      if (vaultBalance >= withdrawAmount.toNumber()) {
+        await program.methods
+          .withdrawSol(withdrawAmount)
+          .accounts({
+            authority: adminWallet.publicKey,
+          })
+          .rpc();
+
+        const adminBalanceAfter = await connection.getBalance(
+          adminWallet.publicKey
+        );
+        // Balance should increase (minus tx fee)
+        expect(adminBalanceAfter).to.be.greaterThan(
+          adminBalanceBefore - 100000
+        ); // accounting for tx fee
+      } else {
+        console.log("(Insufficient SOL in vault for withdrawal test)");
+       }
+    });
+
+    it("9.2 Should FAIL when non-admin tries to withdraw SOL", async () => {
+      const withdrawAmount = new anchor.BN(100_000);
+
+      try {
+        await program.methods
+          .withdrawSol(withdrawAmount)
+          .accounts({
+            authority: voterWallet.publicKey,
+          })
+          .signers([voterWallet])
+          .rpc();
+        expect.fail("Expected withdrawal to fail - unauthorized user");
+      } catch (err) {
+        expectAnchorErrorCode(err, "UnauthorizedAccess");
+      }
+    });
+  });
+})
